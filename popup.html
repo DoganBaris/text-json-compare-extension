@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text&JSON Compare</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 3h3a2 2 0 012 2v14a2 2 0 01-2 2h-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="8" cy="8" r="1.5" fill="#22c55e"/>
+          <circle cx="16" cy="8" r="1.5" fill="#ef4444"/>
+          <circle cx="8" cy="12" r="1.5" fill="#22c55e"/>
+          <circle cx="16" cy="12" r="1.5" fill="#22c55e"/>
+          <circle cx="8" cy="16" r="1.5" fill="#f59e0b"/>
+          <circle cx="16" cy="16" r="1.5" fill="#f59e0b"/>
+        </svg>
+        <h1>Text&JSON Compare</h1>
+      </div>
+      
+      <!-- Mode tabs -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="text">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Text
+        </button>
+        <button class="mode-tab" data-mode="json">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1"/>
+            <path d="M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/>
+          </svg>
+          JSON
+        </button>
+      </div>
+      
+      <div class="actions">
+        <button class="btn btn-ghost" id="clearBtn" title="Clear">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+        </button>
+        <button class="btn btn-ghost" id="swapBtn" title="Swap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="editor-section">
+      <div class="editor-panel">
+        <div class="panel-header">
+          <span class="panel-label">Left Text</span>
+          <button class="btn btn-mini" id="formatLeft">Beautify</button>
+        </div>
+        <textarea id="leftJson" placeholder='Enter text content...'></textarea>
+        <div class="error-msg" id="leftError"></div>
+      </div>
+      
+      <div class="editor-panel">
+        <div class="panel-header">
+          <span class="panel-label">Right Text</span>
+          <button class="btn btn-mini" id="formatRight">Beautify</button>
+        </div>
+        <textarea id="rightJson" placeholder='Enter text content...'></textarea>
+        <div class="error-msg" id="rightError"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="compareBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      Compare
+    </button>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="result-section" id="resultSection">
+      <div class="result-header">
+        <h2>Results</h2>
+        <div class="legend">
+          <span class="legend-item added"><span class="dot"></span>Added</span>
+          <span class="legend-item removed"><span class="dot"></span>Removed</span>
+          <span class="legend-item modified"><span class="dot"></span>Modified</span>
+        </div>
+      </div>
+      
+      <!-- Beyond Compare tarzı yan yana görünüm -->
+      <div class="side-by-side-container">
+        <div class="side-panel">
+          <div class="panel-title">Left</div>
+          <div class="code-view" id="leftCodeView"></div>
+        </div>
+        <div class="side-panel">
+          <div class="panel-title">Right</div>
+          <div class="code-view" id="rightCodeView"></div>
+        </div>
+      </div>
+
+      <!-- Özet tablo - toggle ile açılır kapanır -->
+      <div class="summary-section">
+        <div class="summary-header" id="summaryToggle">
+          <h3>
+            <svg class="toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            Change Summary
+          </h3>
+        </div>
+        <div class="diff-container" id="diffOutput"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="diff.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
