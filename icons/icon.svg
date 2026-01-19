@@ -1,0 +1,30 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="24" fill="#0f1117"/>
+  <rect x="8" y="8" width="112" height="112" rx="20" fill="#161922"/>
+  
+  <!-- Left bracket -->
+  <path d="M40 32H28C24.6863 32 22 34.6863 22 38V90C22 93.3137 24.6863 96 28 96H40" 
+        stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Right bracket -->
+  <path d="M88 32H100C103.314 32 106 34.6863 106 38V90C106 93.3137 103.314 96 100 96H88" 
+        stroke="#3b82f6" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Green dot - added -->
+  <circle cx="40" cy="48" r="8" fill="#22c55e"/>
+  
+  <!-- Red dot - removed -->
+  <circle cx="88" cy="48" r="8" fill="#ef4444"/>
+  
+  <!-- Both green - same -->
+  <circle cx="40" cy="64" r="8" fill="#22c55e"/>
+  <circle cx="88" cy="64" r="8" fill="#22c55e"/>
+  
+  <!-- Both orange - modified -->
+  <circle cx="40" cy="80" r="8" fill="#f59e0b"/>
+  <circle cx="88" cy="80" r="8" fill="#f59e0b"/>
+  
+  <!-- Connection lines -->
+  <path d="M48 64H80" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 4"/>
+  <path d="M48 80H80" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 4"/>
+</svg>
