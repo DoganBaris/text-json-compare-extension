@@ -42,7 +42,7 @@
           JSON
         </button>
       </div>
-      
+
       <div class="actions">
         <button class="btn btn-ghost" id="clearBtn" title="Clear">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -61,16 +61,26 @@
       <div class="editor-panel">
         <div class="panel-header">
           <span class="panel-label">Left Text</span>
-          <button class="btn btn-mini" id="formatLeft">Beautify</button>
+          <div class="panel-actions">
+            <button class="btn btn-mini json-only" id="formatLeft" title="Beautify JSON">Beautify</button>
+            <button class="btn btn-mini json-only" id="removeSpacesLeft" title="Remove extra spaces from string values">No Extra Spaces</button>
+            <button class="btn btn-mini json-only" id="base64ToJsonBtn" title="Decode Base64 → JSON">B64 → JSON</button>
+            <button class="btn btn-mini json-only" id="jsonToBase64Btn" title="Encode JSON → Base64">JSON → B64</button>
+          </div>
         </div>
         <textarea id="leftJson" placeholder='Enter text content...'></textarea>
         <div class="error-msg" id="leftError"></div>
       </div>
-      
+
       <div class="editor-panel">
         <div class="panel-header">
           <span class="panel-label">Right Text</span>
-          <button class="btn btn-mini" id="formatRight">Beautify</button>
+          <div class="panel-actions">
+            <button class="btn btn-mini json-only" id="formatRight" title="Beautify JSON">Beautify</button>
+            <button class="btn btn-mini json-only" id="removeSpacesRight" title="Remove extra spaces from string values">No Extra Spaces</button>
+            <button class="btn btn-mini json-only" id="base64ToJsonRightBtn" title="Decode Base64 → JSON">B64 → JSON</button>
+            <button class="btn btn-mini json-only" id="jsonToBase64RightBtn" title="Encode JSON → Base64">JSON → B64</button>
+          </div>
         </div>
         <textarea id="rightJson" placeholder='Enter text content...'></textarea>
         <div class="error-msg" id="rightError"></div>
@@ -85,6 +95,19 @@
       </svg>
       Compare
     </button>
+
+    <div class="options-bar">
+      <label class="checkbox-label">
+        <input type="checkbox" id="ignoreWhitespace">
+        <span class="checkmark"></span>
+        Ignore leading/trailing whitespace
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="ignoreAllWhitespace">
+        <span class="checkmark"></span>
+        Ignore all whitespace differences
+      </label>
+    </div>
 
     <div class="stats" id="stats"></div>
 
