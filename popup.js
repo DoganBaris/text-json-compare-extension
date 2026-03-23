@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const summarySection = document.querySelector('.summary-section');
   const modeTabs = document.querySelectorAll('.mode-tab');
   const panelLabels = document.querySelectorAll('.panel-label');
+  const ignoreWhitespace = document.getElementById('ignoreWhitespace');
+  const ignoreAllWhitespace = document.getElementById('ignoreAllWhitespace');
 
   // Active mode
   let currentMode = 'text';
@@ -32,12 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function setMode(mode) {
     currentMode = mode;
-    
+
     // Update tabs
     modeTabs.forEach(tab => {
       tab.classList.toggle('active', tab.dataset.mode === mode);
     });
-    
+
     // Update panel labels
     const labels = {
       json: ['Left JSON', 'Right JSON'],
@@ -45,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     panelLabels[0].textContent = labels[mode][0];
     panelLabels[1].textContent = labels[mode][1];
-    
+
     // Update placeholder
     const placeholders = {
       json: '{"key": "value"}',
@@ -53,11 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     leftInput.placeholder = placeholders[mode];
     rightInput.placeholder = placeholders[mode];
-    
-    // Show format buttons only in JSON mode
-    formatLeft.style.display = mode === 'json' ? 'inline-flex' : 'none';
-    formatRight.style.display = mode === 'json' ? 'inline-flex' : 'none';
-    
+
+    // Show JSON-only buttons only in JSON mode
+    document.querySelectorAll('.json-only').forEach(el => {
+      el.style.display = mode === 'json' ? 'inline-flex' : 'none';
+    });
+
     // Clear results
     stats.classList.remove('visible');
     resultSection.classList.remove('visible');
@@ -72,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function parseJson(text, errorEl) {
     errorEl.textContent = '';
-    
+
     if (!text.trim()) {
       return { valid: false, data: null };
     }
@@ -138,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function renderJsonSideBySide(leftData, rightData, differences) {
     const aligned = LineDiff.compareSideBySide(leftData, rightData, differences);
-    
+
     leftCodeView.innerHTML = aligned.left.map(line => {
       const lineNum = line.lineNumber || '';
       const content = LineDiff.highlightLine(line.content);
@@ -149,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     }).join('');
-    
+
     rightCodeView.innerHTML = aligned.right.map(line => {
       const lineNum = line.lineNumber || '';
       const content = LineDiff.highlightLine(line.content);
@@ -176,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     }).join('');
-    
+
     rightCodeView.innerHTML = diffResult.right.map(line => {
       const lineNum = line.lineNumber || '';
       const content = escapeHtml(line.content);
@@ -203,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       rightCodeView.scrollLeft = leftCodeView.scrollLeft;
       isSyncing = false;
     });
-    
+
     rightCodeView.addEventListener('scroll', () => {
       if (isSyncing) return;
       isSyncing = true;
@@ -269,16 +272,16 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function renderTextDiffSummary(diffResult) {
     const changes = [];
-    
+
     for (let i = 0; i < diffResult.left.length; i++) {
       const left = diffResult.left[i];
       const right = diffResult.right[i];
-      
+
       if (left.status !== 'unchanged' || right.status !== 'unchanged') {
         changes.push({ left, right });
       }
     }
-    
+
     if (changes.length === 0) {
       diffOutput.innerHTML = `
         <div class="no-diff">
@@ -295,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = changes.map(({ left, right }) => {
       const leftLine = left.lineNumber ? `Line ${left.lineNumber}` : '';
       const rightLine = right.lineNumber ? `Line ${right.lineNumber}` : '';
-      
+
       return `
         <div class="diff-row">
           <div class="diff-cell ${left.status}">
@@ -361,10 +364,12 @@ document.addEventListener('DOMContentLoaded', () => {
       showStats(diffStats);
       renderJsonSideBySide(leftResult.data, rightResult.data, differences);
       renderJsonDiffSummary(differences);
-      
+
     } else {
-      // Text mode
-      const diffResult = TextDiff.compare(leftText, rightText);
+      // Text mode with whitespace options
+      const trimWs = ignoreWhitespace.checked;
+      const normalizeWs = ignoreAllWhitespace.checked;
+      const diffResult = TextDiff.compare(leftText, rightText, trimWs, normalizeWs);
       const diffStats = TextDiff.getStats(diffResult);
 
       showStats(diffStats);
@@ -428,10 +433,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Remove error style on input
+  // Remove error style on input + auto-detect JSON mode
   leftInput.addEventListener('input', () => {
     leftInput.classList.remove('error');
     leftError.textContent = '';
+
+    const val = leftInput.value.trim();
+    if (val) {
+      try {
+        JSON.parse(val);
+        if (currentMode !== 'json') setMode('json');
+      } catch (e) {
+        if (currentMode !== 'text') setMode('text');
+      }
+    }
   });
 
   rightInput.addEventListener('input', () => {
@@ -446,10 +461,105 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── Remove Extra Spaces ───────────────────────────────────────────────────
+
+function removeExtraSpaces(input, inputEl, errorEl) {
+    const val = input.value.trim();
+    if (!val) return;
+    try {
+      const parsed = JSON.parse(val);
+      input.value = JSON.stringify(parsed);
+      errorEl.textContent = '';
+      inputEl.classList.remove('error');
+    } catch (e) {
+      errorEl.textContent = 'Invalid JSON: ' + e.message;
+      inputEl.classList.add('error');
+    }
+  }
+
+  document.getElementById('removeSpacesLeft').addEventListener('click', () => {
+    removeExtraSpaces(leftInput, leftInput, leftError);
+  });
+
+  document.getElementById('removeSpacesRight').addEventListener('click', () => {
+    removeExtraSpaces(rightInput, rightInput, rightError);
+  });
+
+  // ── Base64 ↔ JSON helpers (UTF-8 safe) ───────────────────────────────────
+
+  function decodeBase64ToJson(input, inputEl, errorEl) {
+    const val = input.value.trim();
+    if (!val) {
+      errorEl.textContent = 'Panel is empty.';
+      return;
+    }
+    try {
+      const decoded = decodeURIComponent(
+        atob(val)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const parsed = JSON.parse(decoded);
+      input.value = JSON.stringify(parsed, null, 2);
+      errorEl.textContent = '';
+      inputEl.classList.remove('error');
+      if (currentMode !== 'json') setMode('json');
+    } catch (e) {
+      errorEl.textContent = 'Failed to decode: ' + e.message;
+      inputEl.classList.add('error');
+    }
+  }
+
+  function encodeJsonToBase64(input, inputEl, errorEl) {
+    const val = input.value.trim();
+    if (!val) {
+      errorEl.textContent = 'Panel is empty.';
+      return;
+    }
+    try {
+      JSON.parse(val); // validate JSON first
+      const encoded = btoa(
+        encodeURIComponent(val).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+          String.fromCharCode(parseInt(p1, 16))
+        )
+      );
+      input.value = encoded;
+      errorEl.textContent = '';
+      inputEl.classList.remove('error');
+    } catch (e) {
+      errorEl.textContent = 'Invalid JSON: ' + e.message;
+      inputEl.classList.add('error');
+    }
+  }
+
+  // ── Left panel ────────────────────────────────────────────────────────────
+
+  document.getElementById('base64ToJsonBtn').addEventListener('click', () => {
+    decodeBase64ToJson(leftInput, leftInput, leftError);
+  });
+
+  document.getElementById('jsonToBase64Btn').addEventListener('click', () => {
+    encodeJsonToBase64(leftInput, leftInput, leftError);
+  });
+
+  // ── Right panel ───────────────────────────────────────────────────────────
+
+  document.getElementById('base64ToJsonRightBtn').addEventListener('click', () => {
+    decodeBase64ToJson(rightInput, rightInput, rightError);
+  });
+
+  document.getElementById('jsonToBase64RightBtn').addEventListener('click', () => {
+    encodeJsonToBase64(rightInput, rightInput, rightError);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Setup scroll sync
   setupScrollSync();
 
-  // Initialize: hide Beautify buttons for text mode (default)
-  formatLeft.style.display = 'none';
-  formatRight.style.display = 'none';
+  // Initialize: hide JSON-only buttons for text mode (default)
+  document.querySelectorAll('.json-only').forEach(el => {
+    el.style.display = 'none';
+  });
 });
