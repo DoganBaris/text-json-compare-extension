@@ -438,16 +438,32 @@ window.LineDiff = LineDiff;
 const TextDiff = {
   /**
    * Compare two texts line by line
+   * @param {string} leftText
+   * @param {string} rightText
+   * @param {boolean} trimWhitespace - trim leading/trailing whitespace
+   * @param {boolean} normalizeWhitespace - normalize all whitespace
    */
-  compare(leftText, rightText) {
+  compare(leftText, rightText, trimWhitespace = false, normalizeWhitespace = false) {
     const leftLines = leftText.split('\n');
     const rightLines = rightText.split('\n');
     
-    // Compute LCS (Longest Common Subsequence)
-    const lcs = this._computeLCS(leftLines, rightLines);
+    // Create normalized versions for comparison
+    let leftNormalized = leftLines;
+    let rightNormalized = rightLines;
     
-    // Build diff
-    return this._buildDiff(leftLines, rightLines, lcs);
+    if (normalizeWhitespace) {
+      leftNormalized = leftLines.map(line => line.replace(/\s+/g, ' ').trim());
+      rightNormalized = rightLines.map(line => line.replace(/\s+/g, ' ').trim());
+    } else if (trimWhitespace) {
+      leftNormalized = leftLines.map(line => line.trim());
+      rightNormalized = rightLines.map(line => line.trim());
+    }
+    
+    // Compute LCS using normalized lines
+    const lcs = this._computeLCS(leftNormalized, rightNormalized);
+    
+    // Build diff using original lines (for display) but normalized for matching
+    return this._buildDiff(leftLines, rightLines, leftNormalized, rightNormalized, lcs);
   },
 
   /**
@@ -473,8 +489,13 @@ const TextDiff = {
 
   /**
    * Build diff from LCS
+   * @param {string[]} left - original left lines (for display)
+   * @param {string[]} right - original right lines (for display)
+   * @param {string[]} leftNorm - normalized left lines (for comparison)
+   * @param {string[]} rightNorm - normalized right lines (for comparison)
+   * @param {number[][]} dp - LCS table
    */
-  _buildDiff(left, right, dp) {
+  _buildDiff(left, right, leftNorm, rightNorm, dp) {
     const result = { left: [], right: [] };
     let i = left.length;
     let j = right.length;
@@ -483,8 +504,8 @@ const TextDiff = {
     const rightResult = [];
     
     while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && left[i - 1] === right[j - 1]) {
-        // Same line
+      if (i > 0 && j > 0 && leftNorm[i - 1] === rightNorm[j - 1]) {
+        // Same line (using normalized comparison)
         leftResult.unshift({ lineNumber: i, content: left[i - 1], status: 'unchanged' });
         rightResult.unshift({ lineNumber: j, content: right[j - 1], status: 'unchanged' });
         i--;
@@ -531,3 +552,24 @@ const TextDiff = {
 };
 
 window.TextDiff = TextDiff;
+
+/**
+ * Whitespace normalization utilities
+ */
+const WhitespaceUtil = {
+  /**
+   * Trim leading and trailing whitespace
+   */
+  trimLine(line) {
+    return line.trim();
+  },
+
+  /**
+   * Normalize all whitespace (collapse multiple spaces, trim)
+   */
+  normalizeAll(line) {
+    return line.replace(/\s+/g, ' ').trim();
+  }
+};
+
+window.WhitespaceUtil = WhitespaceUtil;
